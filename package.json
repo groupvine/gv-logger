@@ -1,0 +1,27 @@
+{
+  "name": "gv-logger",
+  "version": "1.0.0",
+  "description": "GroupVine Logger Utility",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/davebeyer/gv-logger.git"
+  },
+  "keywords": [
+    "GroupVine",
+    "logger"
+  ],
+  "author": "Dave Beyer",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/davebeyer/gv-logger/issues"
+  },
+  "homepage": "https://github.com/davebeyer/gv-logger#readme",
+  "dependencies": {
+    "bunyan": "^1.8.5",
+    "bunyan-debug-stream": "^1.0.7"
+  }
+}
