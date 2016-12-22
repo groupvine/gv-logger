@@ -22,14 +22,14 @@ logger.init();
 To use:
 
 ```
-logger.debug(`Module name: Some message ${some variable}`);
+logger.debug(`Module name: Some message ${some_variable}`);
 
-logger.info(`Module name: Some message ${some variable}`);
+logger.info(`Module name: Some message ${some_variable}`);
 ```
 
 ```
-// If err is a javascript Error(), this will dump a stacktrace
-logger.error({err: err}, "My module: error message");
+// If error is a javascript Error(), this will dump a stacktrace
+logger.error({err: error}, "My module: error message");
 ```
 
 
