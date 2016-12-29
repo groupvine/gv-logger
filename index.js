@@ -108,8 +108,9 @@ var Logger = (function () {
     //    app.use(logger.express());
     //
     Logger.prototype.express = function () {
+        var _this = this;
         return function (req, res, next) {
-            this.bunyanLog.info({ req: req, res: res });
+            _this.bunyanLog.info({ req: req, res: res });
             next();
         };
     };
