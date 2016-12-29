@@ -129,8 +129,9 @@ export class Logger {
     //
 
     public express() {
+        let _this = this;
         return function(req, res, next) {
-            this.bunyanLog.info({req : req, res : res});
+            _this.bunyanLog.info({req : req, res : res});
             next();
         }
     }
