@@ -126,11 +126,31 @@ export class Logger {
     // Use like:
     //
     //    app.use(logger.express());
+    // or    
+    //    app.use(/node_modules/, 'skip');
     //
 
-    public express() {
+    public express(regex?:string, mode?:string) {
+        let msg = "Logging HTTP requests";
+        if (regex) {
+            msg += " with RegExp qualification: " + regex.toString();
+            if (mode) {
+                msg += ` => ${mode}`;
+            }
+        }
+        this.info(msg);
+ 
+        let _this = this;
         return function(req, res, next) {
-            this.bunyanLog.info({req : req, res : res});
+            if (regex) {
+                let matches = (req.url.match(regex) !== null);
+                if (mode == 'skip') {
+                    if (matches)  { return next(); }
+                } else {
+                    if (!matches) { return next(); }
+                }
+            }
+            _this.bunyanLog.info({req : req, res : res});
             next();
         }
     }
