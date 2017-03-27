@@ -245,9 +245,9 @@ export class Logger {
         if (! (opts.err instanceof Error) ) {
             if ( typeof opts.err !== 'string' ) {
                 try {
-                    opts.err = JSON.stringify(opts.err);
+                    opts['err'] = JSON.stringify(opts.err);
                 } catch (e) {
-                    opts.err = opts.err + '';
+                    opts['err'] = opts.err + '';
                 }
             }
         }
