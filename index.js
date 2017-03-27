@@ -234,7 +234,7 @@ var Logger = (function () {
         // If 'err' is one of the properties in opts, but is NOT an Error, 
         // then convert it to a string, and make it part of the message rather
         // than have it shown on a separate line as an 'arg'
-        if (!(opts.err instanceof Error)) {
+        if (opts.err && (!(opts.err instanceof Error))) {
             if (typeof opts.err !== 'string') {
                 try {
                     opts['err'] = JSON.stringify(opts.err);
