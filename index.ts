@@ -239,8 +239,18 @@ export class Logger {
         }
 
         // If 'err' is one of the properties in opts, but is NOT an Error, 
-        // (and is a string) then just make it part of the message rather
+        // then convert it to a string, and make it part of the message rather
         // than have it shown on a separate line as an 'arg'
+
+        if (opts.err instanceof Error) {
+            if ( typeof opts.err !== 'string' ) {
+                try {
+                    opts.err = JSON.stringify(opts.err);
+                } catch (e) {
+                    opts.err = opts.err + '';
+                }
+            }
+        }
 
         if ( typeof opts.err === 'string' ) {
             if (!msg) { msg  = '';  }
@@ -248,6 +258,7 @@ export class Logger {
             msg += opts.err;
             delete opts.err;
         }
+
 
         var func = this.bunyanLog[logType].bind(this.bunyanLog);
 
