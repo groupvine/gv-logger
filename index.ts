@@ -1,5 +1,5 @@
-var bunyan    = require("bunyan");
-var bunyanDbg = require("bunyan-debug-stream");
+import * as bunyan     from 'bunyan';
+import * as bunyanDbg  from 'bunyan-debug-stream';
 
 export enum LogLevel {
     // levels set same as bunyan levels
@@ -119,6 +119,12 @@ export class Logger {
 
     public coreLogger() {
         return this.bunyanLog;
+    }
+
+    // Set or get current logging level
+
+    public level(newLevel?:string|number) {
+        return this.coreLogger().level(newLevel);
     }
 
     //

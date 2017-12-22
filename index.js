@@ -101,6 +101,10 @@ var Logger = (function () {
     Logger.prototype.coreLogger = function () {
         return this.bunyanLog;
     };
+    // Set or get current logging level
+    Logger.prototype.level = function (newLevel) {
+        return this.coreLogger().level(newLevel);
+    };
     //
     // Logger for Express requests
     // Use like:
