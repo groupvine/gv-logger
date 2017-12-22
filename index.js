@@ -88,9 +88,20 @@ var Logger = (function () {
     //
     // Creating a child logger
     //
-    Logger.prototype.childLogger = function (moduleName) {
+    Logger.prototype.childLogger = function (moduleName, options) {
+        if (options == null) {
+            options = this.options;
+        }
+        else {
+            var optProps = Object.keys(this.options);
+            for (var i = 0; i < optProps.length; i++) {
+                if (options[optProps[i]] == null) {
+                    options[optProps[i]] = this.options[optProps[i]];
+                }
+            }
+        }
         var newBunyan = this.bunyanLog.child({ mod: moduleName });
-        var newLogger = new Logger(this.name, this.filepath, this.basepath, this.options);
+        var newLogger = new Logger(this.name, this.filepath, this.basepath, options);
         newLogger.init(newBunyan);
         return newLogger;
     };
@@ -100,10 +111,6 @@ var Logger = (function () {
     //
     Logger.prototype.coreLogger = function () {
         return this.bunyanLog;
-    };
-    // Set or get current logging level
-    Logger.prototype.level = function (newLevel) {
-        return this.coreLogger().level(newLevel);
     };
     //
     // Logger for Express requests

@@ -104,9 +104,20 @@ export class Logger {
     // Creating a child logger
     //
 
-    public childLogger(moduleName:string) {
+    public childLogger(moduleName:string, options?:any) {
+        if (options == null) {
+            options = this.options;
+        } else {
+            let optProps = Object.keys(this.options);
+            for (let i = 0; i < optProps.length; i++) {
+                if (options[optProps[i]] == null) {
+                    options[optProps[i]] = this.options[optProps[i]];
+                }
+            }            
+        }
+
         let newBunyan = this.bunyanLog.child({mod :  moduleName});
-        let newLogger = new Logger(this.name, this.filepath, this.basepath, this.options);
+        let newLogger = new Logger(this.name, this.filepath, this.basepath, options);
 
         newLogger.init(newBunyan)
         return newLogger;
@@ -119,12 +130,6 @@ export class Logger {
 
     public coreLogger() {
         return this.bunyanLog;
-    }
-
-    // Set or get current logging level
-
-    public level(newLevel?:string|number) {
-        return this.coreLogger().level(newLevel);
     }
 
     //
