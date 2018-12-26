@@ -12,6 +12,31 @@ var LogLevel;
     LogLevel[LogLevel["Trace"] = 10] = "Trace";
 })(LogLevel = exports.LogLevel || (exports.LogLevel = {}));
 ;
+function console2Logger(logger) {
+    ["log", "warn", "error"].forEach(function (method) {
+        console[method] = function () {
+            var args = [];
+            for (var _i = 0; _i < arguments.length; _i++) {
+                args[_i] = arguments[_i];
+            }
+            if (args.length === 0) {
+                args = [''];
+            }
+            switch (method) {
+                case 'log':
+                    logger.info.apply(logger, args);
+                    break;
+                case 'warn':
+                    logger.warn.apply(logger, args);
+                    break;
+                case 'error':
+                    logger.error.apply(logger, args);
+                    break;
+            }
+        };
+    });
+}
+exports.console2Logger = console2Logger;
 var Logger = (function () {
     function Logger(name, filepath, basepath, options) {
         if (!options) {

@@ -11,6 +11,27 @@ export enum LogLevel {
     Trace   = 10
 };
 
+export function console2Logger(logger:any) {
+    ["log", "warn", "error"].forEach(function(method) {
+        console[method] = function(...args:any[]) {
+            if (args.length === 0) {
+                args = [''];
+            }
+            switch (method) {
+            case 'log':
+                logger.info.apply(logger, args);
+                break;
+            case 'warn':
+                logger.warn.apply(logger, args);
+                break;
+            case 'error':
+                logger.error.apply(logger, args);
+                break;
+            }
+        };
+    });
+}
+
 export class Logger {
     name      : string;  // server name
     filepath  : string;  // filepath to .json log file
