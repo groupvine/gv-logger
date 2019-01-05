@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build" : "tsc index.ts"
+    "build": "tsc index.ts",
+    "reinstall": "rm -rf node_modules && npm install"
   },
   "repository": {
     "type": "git",
@@ -22,7 +23,7 @@
   },
   "homepage": "https://github.com/davebeyer/gv-logger#readme",
   "dependencies": {
-    "bunyan": "^1.8.5",
-    "bunyan-debug-stream": "^1.0.7"
+    "bunyan": "^1.8.12",
+    "bunyan-debug-stream": "^2.0.0"
   }
 }
