@@ -11,8 +11,20 @@ export enum LogLevel {
     Trace   = 10
 };
 
+let origConsoleMethods = null;
+let origLogger         = null;
+
+let consoleMethods     = ["log", "warn", "error"];
+
 export function console2Logger(logger:any) {
-    ["log", "warn", "error"].forEach(function(method) {
+    origLogger         = logger;
+    origConsoleMethods = {};
+
+    consoleMethods.forEach(function(method) {
+        origConsoleMethods[method] = console[method];
+    });
+
+    consoleMethods.forEach(function(method) {
         console[method] = function(...args:any[]) {
             if (args.length === 0) {
                 args = [''];
@@ -31,6 +43,23 @@ export function console2Logger(logger:any) {
         };
     });
 }
+
+function revertConsoleRedirect() {
+    if (origConsoleMethods == null) {
+        return;
+    }
+    consoleMethods.forEach(function(method) {
+        console[method] = origConsoleMethods[method];
+    });
+}
+
+function restoreConsoleRedirect() {
+    if (origLogger == null) {
+        return;
+    }
+    console2Logger(origLogger);
+}
+
 
 export class Logger {
     name      : string;  // server name
@@ -256,6 +285,8 @@ export class Logger {
     private handleLog(opts:any, msg:any, args:any[], logType:any) {
         let newOpts;
 
+        revertConsoleRedirect();
+
         if (typeof opts === 'string') {
             if (msg) {
                 args.unshift(msg);
@@ -294,10 +325,16 @@ export class Logger {
 
         var func = this.bunyanLog[logType].bind(this.bunyanLog);
 
+        let res;
         if (msg !== undefined) {
-            return func(newOpts, msg);
-        } else {
-            return func(newOpts);
+            res = func(newOpts, msg);
         }
+        else {
+            res = func(newOpts);
+        }
+
+        restoreConsoleRedirect();
+
+        return res;
     }
 }

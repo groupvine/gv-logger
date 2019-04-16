@@ -12,8 +12,16 @@ var LogLevel;
     LogLevel[LogLevel["Trace"] = 10] = "Trace";
 })(LogLevel = exports.LogLevel || (exports.LogLevel = {}));
 ;
+var origConsoleMethods = null;
+var origLogger = null;
+var consoleMethods = ["log", "warn", "error"];
 function console2Logger(logger) {
-    ["log", "warn", "error"].forEach(function (method) {
+    origLogger = logger;
+    origConsoleMethods = {};
+    consoleMethods.forEach(function (method) {
+        origConsoleMethods[method] = console[method];
+    });
+    consoleMethods.forEach(function (method) {
         console[method] = function () {
             var args = [];
             for (var _i = 0; _i < arguments.length; _i++) {
@@ -37,6 +45,20 @@ function console2Logger(logger) {
     });
 }
 exports.console2Logger = console2Logger;
+function revertConsoleRedirect() {
+    if (origConsoleMethods == null) {
+        return;
+    }
+    consoleMethods.forEach(function (method) {
+        console[method] = origConsoleMethods[method];
+    });
+}
+function restoreConsoleRedirect() {
+    if (origLogger == null) {
+        return;
+    }
+    console2Logger(origLogger);
+}
 var Logger = (function () {
     function Logger(name, filepath, basepath, options) {
         if (!options) {
@@ -254,6 +276,7 @@ var Logger = (function () {
     };
     Logger.prototype.handleLog = function (opts, msg, args, logType) {
         var newOpts;
+        revertConsoleRedirect();
         if (typeof opts === 'string') {
             if (msg) {
                 args.unshift(msg);
@@ -291,12 +314,15 @@ var Logger = (function () {
             delete opts.err;
         }
         var func = this.bunyanLog[logType].bind(this.bunyanLog);
+        var res;
         if (msg !== undefined) {
-            return func(newOpts, msg);
+            res = func(newOpts, msg);
         }
         else {
-            return func(newOpts);
+            res = func(newOpts);
         }
+        restoreConsoleRedirect();
+        return res;
     };
     return Logger;
 }());
