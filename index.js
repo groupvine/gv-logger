@@ -1,6 +1,4 @@
 "use strict";
-exports.__esModule = true;
-exports.Logger = exports.console2Logger = exports.LogLevel = void 0;
 var bunyan = require("bunyan");
 var bunyanDbg = require("bunyan-debug-stream");
 var LogLevel;
@@ -61,7 +59,7 @@ function restoreConsoleRedirect() {
     }
     console2Logger(origLogger);
 }
-var Logger = /** @class */ (function () {
+var Logger = (function () {
     function Logger(name, filepath, basepath, options) {
         if (!options) {
             options = {};
@@ -118,7 +116,6 @@ var Logger = /** @class */ (function () {
                             // Add (child) module to line, if present 
                             'mod': function (mod) { return mod ? mod : null; }
                         }
-                        // out        : process.stdout ... stderr?
                     })
                 });
             }
