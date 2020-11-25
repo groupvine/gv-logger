@@ -2,9 +2,9 @@
   "version": "3.1.6",
 
   "compilerOptions": {
-    "target": "es5",
+    "target": "es2015",
+    "module": "es2020",
     "lib": [ "dom", "es2015", "es2016", "es2017" ],
-    "module": "es2015",
     "moduleResolution": "node",
     "declaration": false,
     "noImplicitAny": false,
