@@ -142,7 +142,7 @@ export class Logger {
                                     `user ${userId}/${req.userRole} ` +
                                     `${req.site} ` +
                                     `${req.url} ` +
-                                    `(from ${req.remoteAddress}:${req.remotePort}; ` +
+                                    `(from ${req.remoteAddress}; ` +  // ${req.remotePort} not reliable thru proxy?
                                     `ref ${req.referer}; ` +
                                     `agent ${req.userAgent})`;
 
@@ -189,9 +189,9 @@ export class Logger {
                         url: req.originalUrl || req.url,
                         userAgent: hdrs['user-agent'],
                         referer:hdrs.referer,
-                        remoteAddress: conn.remoteAddress,
+                        remoteAddress: req.ip,  // relies on trust-proxy
                         contentLen: hdrs['content-length'],
-                        remotePort: conn.remotePort,
+                        // remotePort: conn.remotePort,  //  not reliable thru proxy?
                         userId: req.user != null ? req.user.user_id : null,
                         userRole: req.userRole != null ? req.userRole : null
                     };
