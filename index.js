@@ -3,6 +3,7 @@ exports.__esModule = true;
 exports.Logger = exports.console2Logger = exports.LogLevel = void 0;
 var bunyan = require("bunyan");
 var bunyanDbg = require("bunyan-debug-stream");
+var colorsUtil = require("colors/safe");
 var LogLevel;
 (function (LogLevel) {
     // levels set same as bunyan levels
@@ -113,10 +114,34 @@ var Logger = /** @class */ (function () {
                     type: 'raw',
                     stream: bunyanDbg({
                         basepath: this.basepath,
-                        forceColor: true,
+                        forceColor: false,
                         prefixers: {
                             // Add (child) module to line, if present 
-                            'mod': function (mod) { return mod ? mod : null; }
+                            'mod': function (mod) {
+                                return mod ? mod : null;
+                            },
+                            'req': function (req, options) {
+                                var colorsToApply = options.debugStream._colors[options.entry.level];
+                                var len = req.contentLen ? req.contentLen + 'B' : '-';
+                                var statusCode = options.entry && options.entry.res ? options.entry.res.statusCode : '?';
+                                var userId = req.userId ? req.userId : '-';
+                                var value = req.method + " " + len + " [" + statusCode + "] " +
+                                    ("user " + userId + "/" + req.userRole + " ") +
+                                    (req.site + " ") +
+                                    (req.url + " ") +
+                                    ("(from " + req.remoteAddress + ":" + req.remotePort + "; ") +
+                                    ("ref " + req.referer + "; ") +
+                                    ("agent " + req.userAgent + ")");
+                                colorsToApply.map(function (c) {
+                                    // typically just one color, but could have other styling
+                                    value = colorsUtil[c](value);
+                                });
+                                return {
+                                    value: value,
+                                    replaceMessage: true,
+                                    consumed: ['req', 'res', 'method', 'url', 'host', 'user']
+                                };
+                            }
                         }
                         // out        : process.stdout ... stderr?
                     })
@@ -126,9 +151,45 @@ var Logger = /** @class */ (function () {
                 delete options.consoleOff;
             }
             //
-            // Set serializers (just the standard one for now, for errors)
+            // Init serializers (just the standard one for now, for errors)
             //
             options.serializers = bunyan.stdSerializers;
+            // Overwrite with our own for request
+            // see ~/gv/node_modules/gv-logger/node_modules/bunyan/lib/bunyan.js
+            options['serializers']['req'] = function (req) {
+                if (!req) {
+                    return req;
+                }
+                else {
+                    var conn = req.connection != null ? req.connection : {};
+                    var lcls = req.locals != null ? req.locals : {};
+                    var hdrs = req.headers != null ? req.headers : {};
+                    return {
+                        method: req.method,
+                        site: lcls.subdomain,
+                        // Accept `req.originalUrl` for expressjs usage.
+                        // https://expressjs.com/en/api.html#req.originalUrl
+                        url: req.originalUrl || req.url,
+                        userAgent: hdrs['user-agent'],
+                        referer: hdrs.referer,
+                        remoteAddress: conn.remoteAddress,
+                        contentLen: hdrs['content-length'],
+                        remotePort: conn.remotePort,
+                        userId: req.user != null ? req.user.user_id : null,
+                        userRole: req.userRole != null ? req.userRole : null
+                    };
+                }
+            };
+            options['serializers']['res'] = function (res) {
+                if (!res) {
+                    return res;
+                }
+                else {
+                    return {
+                        statusCode: res.statusCode
+                    };
+                }
+            };
             // Create logger
             this.bunyanLog = bunyan.createLogger(options);
         }
@@ -168,12 +229,21 @@ var Logger = /** @class */ (function () {
     //
     //    app.use(logger.express());
     // or    
-    //    app.use(/node_modules/, 'skip');
+    //    app.use(logger.express(/node_modules/, 'skip'));
     //
     Logger.prototype.express = function (regex, mode) {
-        var msg = "Logging HTTP requests";
+        var reSkips = null;
         if (regex) {
-            msg += " with RegExp qualification: " + regex.toString();
+            if (Array.isArray(regex)) {
+                reSkips = regex;
+            }
+            else {
+                reSkips = [regex];
+            }
+        }
+        var msg = "GVLogger logging HTTP requests";
+        if (reSkips) {
+            msg += " with RegExp qualification(s): " + reSkips.map(function (x) { return x.toString(); }).join(';');
             if (mode) {
                 msg += " => " + mode;
             }
@@ -181,8 +251,8 @@ var Logger = /** @class */ (function () {
         this.info(msg);
         var _this = this;
         return function (req, res, next) {
-            if (regex) {
-                var matches = (req.url.match(regex) !== null);
+            if (reSkips != null) {
+                var matches = reSkips.some(function (re) { return req.url.match(re) !== null; });
                 if (mode == 'skip') {
                     if (matches) {
                         return next();
@@ -194,7 +264,9 @@ var Logger = /** @class */ (function () {
                     }
                 }
             }
-            _this.bunyanLog.info({ req: req, res: res });
+            var opts = { req: req, res: res };
+            opts['time'] = (new Date()).toISOString();
+            _this.bunyanLog.info(opts);
             next();
         };
     };
@@ -317,6 +389,8 @@ var Logger = /** @class */ (function () {
             delete opts.err;
         }
         var func = this.bunyanLog[logType].bind(this.bunyanLog);
+        // Use ISO UTC timestamp
+        newOpts['time'] = (new Date()).toISOString();
         var res;
         if (msg !== undefined) {
             res = func(newOpts, msg);

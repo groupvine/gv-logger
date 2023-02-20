@@ -1,6 +1,8 @@
 import * as bunyan     from 'bunyan';
 import * as bunyanDbg  from 'bunyan-debug-stream';
 
+import * as colorsUtil from 'colors/safe';
+
 export enum LogLevel {
     // levels set same as bunyan levels
     Fatal   = 60,
@@ -123,11 +125,40 @@ export class Logger {
                     type   : 'raw',
                     stream : bunyanDbg({
                         basepath   : this.basepath,  
-                        forceColor : true,
+                        forceColor : false,
                         prefixers: {
                             // Add (child) module to line, if present 
-                            'mod': function(mod) {return mod ? mod : null;}
+                            'mod': function(mod) {
+                                return mod ? mod : null;
+                            },
+                            'req' : function(req, options) {
+                                let colorsToApply = options.debugStream._colors[options.entry.level];
+                                let len = req.contentLen ? req.contentLen + 'B' : '-';
+                                let statusCode = options.entry && options.entry.res ? options.entry.res.statusCode : '?';
+                                let userId = req.userId ? req.userId  : '-';
+                                
+                                let value = 
+                                    `${req.method} ${len} [${statusCode}] ` +
+                                    `user ${userId}/${req.userRole} ` +
+                                    `${req.site} ` +
+                                    `${req.url} ` +
+                                    `(from ${req.remoteAddress}:${req.remotePort}; ` +
+                                    `ref ${req.referer}; ` +
+                                    `agent ${req.userAgent})`;
+
+                                colorsToApply.map( c => {
+                                    // typically just one color, but could have other styling
+                                    value = colorsUtil[c](value);
+                                });
+                                
+                                return {
+                                    value : value,
+                                    replaceMessage: true,
+                                    consumed : ['req', 'res', 'method', 'url', 'host', 'user']
+                                }
+                            }
                         }
+
                         // out        : process.stdout ... stderr?
                     })
                 });
@@ -136,11 +167,46 @@ export class Logger {
             }
 
             //
-            // Set serializers (just the standard one for now, for errors)
+            // Init serializers (just the standard one for now, for errors)
             //
 
             options.serializers = bunyan.stdSerializers;
 
+            // Overwrite with our own for request
+            // see ~/gv/node_modules/gv-logger/node_modules/bunyan/lib/bunyan.js
+            options['serializers']['req'] = function(req) {
+                if (!req) {
+                    return req;
+                } else {
+                    let conn = req.connection != null ? req.connection : {};
+                    let lcls = req.locals  != null ? req.locals  : {};
+                    let hdrs = req.headers != null ? req.headers : {};
+                    return {
+                        method: req.method,
+                        site: lcls.subdomain,
+                        // Accept `req.originalUrl` for expressjs usage.
+                        // https://expressjs.com/en/api.html#req.originalUrl
+                        url: req.originalUrl || req.url,
+                        userAgent: hdrs['user-agent'],
+                        referer:hdrs.referer,
+                        remoteAddress: conn.remoteAddress,
+                        contentLen: hdrs['content-length'],
+                        remotePort: conn.remotePort,
+                        userId: req.user != null ? req.user.user_id : null,
+                        userRole: req.userRole != null ? req.userRole : null
+                    };
+                }
+            };
+            options['serializers']['res'] = function(res) {
+                if (!res) {
+                    return res;
+                } else {
+                    return {
+                        statusCode : res.statusCode
+                    };
+                }
+            };
+            
             // Create logger
 
             this.bunyanLog = bunyan.createLogger(options);
@@ -188,13 +254,22 @@ export class Logger {
     //
     //    app.use(logger.express());
     // or    
-    //    app.use(/node_modules/, 'skip');
+    //    app.use(logger.express(/node_modules/, 'skip'));
     //
 
-    public express(regex?:string, mode?:string) {
-        let msg = "Logging HTTP requests";
+    public express(regex?:string|RegExp|Array<string|RegExp>, mode?:string) {
+        let reSkips:Array<string|RegExp> = null;
+        
         if (regex) {
-            msg += " with RegExp qualification: " + regex.toString();
+            if (Array.isArray(regex)) {
+                reSkips = regex;
+            } else {
+                reSkips = [regex];
+            }
+        }
+        let msg = "GVLogger logging HTTP requests";
+        if (reSkips) {
+            msg += " with RegExp qualification(s): " + reSkips.map(x => x.toString()).join(';');
             if (mode) {
                 msg += ` => ${mode}`;
             }
@@ -203,15 +278,20 @@ export class Logger {
  
         let _this = this;
         return function(req, res, next) {
-            if (regex) {
-                let matches = (req.url.match(regex) !== null);
+            if (reSkips != null) {
+                let matches = reSkips.some(re => req.url.match(re) !== null );
+                
                 if (mode == 'skip') {
                     if (matches)  { return next(); }
                 } else {
                     if (!matches) { return next(); }
                 }
             }
-            _this.bunyanLog.info({req : req, res : res});
+
+            let opts = {req : req, res : res};
+            opts['time'] = (new Date()).toISOString();
+            
+            _this.bunyanLog.info(opts);
             next();
         }
     }
@@ -324,6 +404,9 @@ export class Logger {
 
 
         var func = this.bunyanLog[logType].bind(this.bunyanLog);
+
+        // Use ISO UTC timestamp
+        newOpts['time'] = (new Date()).toISOString();
 
         let res;
         if (msg !== undefined) {

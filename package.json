@@ -25,7 +25,8 @@
   "homepage": "https://github.com/groupvine/gv-logger#readme",
   "dependencies": {
     "bunyan": "^1.8.15",
-    "bunyan-debug-stream": "^2.0.1"
+    "bunyan-debug-stream": "^2.0.1",
+    "colors": "^1.4.0"
   },
   "devDependencies": {
     "typescript": "^3.4.5"
