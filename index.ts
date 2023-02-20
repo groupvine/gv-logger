@@ -178,7 +178,7 @@ export class Logger {
                 if (!req) {
                     return req;
                 } else {
-                    let conn = req.connection != null ? req.connection : {};
+                    // let conn = req.connection != null ? req.connection : {};
                     let lcls = req.locals  != null ? req.locals  : {};
                     let hdrs = req.headers != null ? req.headers : {};
                     return {

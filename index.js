@@ -161,7 +161,7 @@ var Logger = /** @class */ (function () {
                     return req;
                 }
                 else {
-                    var conn = req.connection != null ? req.connection : {};
+                    // let conn = req.connection != null ? req.connection : {};
                     var lcls = req.locals != null ? req.locals : {};
                     var hdrs = req.headers != null ? req.headers : {};
                     return {
