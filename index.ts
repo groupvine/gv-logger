@@ -140,11 +140,11 @@ export class Logger {
                                 let value = 
                                     `${req.method} ${len} [${statusCode}] ` +
                                     `user ${userId}/${req.userRole} ` +
-                                    `${req.site} ` +
+                                    `${req.site ? req.site : '??'} ` +
                                     `${req.url} ` +
                                     `(from ${req.remoteAddress}; ` +  // ${req.remotePort} not reliable thru proxy?
-                                    `ref ${req.referer}; ` +
-                                    `agent ${req.userAgent})`;
+                                    `ref ${req.referer ? req.referer : '??'}; ` +
+                                    `agent ${req.userAgent ? req.userAgent : '??'})`;
 
                                 colorsToApply.map( c => {
                                     // typically just one color, but could have other styling
