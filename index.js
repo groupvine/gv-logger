@@ -1,8 +1,9 @@
 "use strict";
-exports.__esModule = true;
+Object.defineProperty(exports, "__esModule", { value: true });
 exports.Logger = exports.console2Logger = exports.LogLevel = void 0;
 var bunyan = require("bunyan");
-var bunyanDbg = require("bunyan-debug-stream");
+// import * as bunyanDbg  from 'bunyan-debug-stream';
+var bunyanDbg = require('bunyan-debug-stream');
 var colorsUtil = require("colors/safe");
 var LogLevel;
 (function (LogLevel) {
@@ -125,13 +126,13 @@ var Logger = /** @class */ (function () {
                                 var len = req.contentLen ? req.contentLen + 'B' : '-';
                                 var statusCode = options.entry && options.entry.res ? options.entry.res.statusCode : '?';
                                 var userId = req.userId ? req.userId : '-';
-                                var value = req.method + " " + len + " [" + statusCode + "] " +
-                                    ("user " + userId + "/" + req.userRole + " ") +
-                                    ((req.site ? req.site : '??') + " ") +
-                                    (req.url + " ") +
-                                    ("(from " + req.remoteAddress + "; ") + // ${req.remotePort} not reliable thru proxy?
-                                    ("ref " + (req.referer ? req.referer : '??') + "; ") +
-                                    ("agent " + (req.userAgent ? req.userAgent : '??') + ")");
+                                var value = "".concat(req.method, " ").concat(len, " [").concat(statusCode, "] ") +
+                                    "user ".concat(userId, "/").concat(req.userRole, " ") +
+                                    "".concat(req.site ? req.site : '??', " ") +
+                                    "".concat(req.url, " ") +
+                                    "(from ".concat(req.remoteAddress, "; ") + // ${req.remotePort} not reliable thru proxy?
+                                    "ref ".concat(req.referer ? req.referer : '??', "; ") +
+                                    "agent ".concat(req.userAgent ? req.userAgent : '??', ")");
                                 colorsToApply.map(function (c) {
                                     // typically just one color, but could have other styling
                                     value = colorsUtil[c](value);
@@ -245,7 +246,7 @@ var Logger = /** @class */ (function () {
         if (reSkips) {
             msg += " with RegExp qualification(s): " + reSkips.map(function (x) { return x.toString(); }).join(';');
             if (mode) {
-                msg += " => " + mode;
+                msg += " => ".concat(mode);
             }
         }
         this.info(msg);

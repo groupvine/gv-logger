@@ -1,5 +1,7 @@
 import * as bunyan     from 'bunyan';
-import * as bunyanDbg  from 'bunyan-debug-stream';
+
+// import * as bunyanDbg  from 'bunyan-debug-stream';
+const bunyanDbg = require('bunyan-debug-stream');
 
 import * as colorsUtil from 'colors/safe';
 
