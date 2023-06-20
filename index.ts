@@ -125,7 +125,7 @@ export class Logger {
                 options.streams.push({
                     level  : level,
                     type   : 'raw',
-                    stream : bunyanDbg({
+                    stream : bunyanDbg.create({
                         basepath   : this.basepath,  
                         forceColor : false,
                         prefixers: {

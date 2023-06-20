@@ -113,7 +113,7 @@ var Logger = /** @class */ (function () {
                 options.streams.push({
                     level: level_1,
                     type: 'raw',
-                    stream: bunyanDbg({
+                    stream: bunyanDbg.create({
                         basepath: this.basepath,
                         forceColor: false,
                         prefixers: {
